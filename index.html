@@ -3,142 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hardware Barcode Generator</title>
+  <title>Multi Barcode Generator - Baloch Tools</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #f8f9fa;
-      color: #333;
-    }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
     .container {
-      max-width: 600px;
-      margin: 3rem auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      text-align: center;
+      max-width: 600px; margin: 3rem auto; background: #fff; border-radius: 12px;
+      padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
     }
-    .logo {
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-      margin-bottom: 1rem;
-    }
-    .shop-name {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-    h1 {
-      font-size: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    label {
-      font-weight: 600;
-      margin-top: 1rem;
-      display: block;
-      text-align: left;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-top: 0.5rem;
-      font-size: 1rem;
-    }
+    .logo { width: 100px; height: 100px; object-fit: contain; margin-bottom: 1rem; }
+    .shop-name { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    label { font-weight: 600; margin-top: 1rem; display: block; text-align: left; }
+    input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc; margin-top: 0.5rem; font-size: 1rem; }
     button {
-      margin-top: 2rem;
-      width: 100%;
-      padding: 0.9rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-      background-color: #007bff;
-      cursor: pointer;
+      margin-top: 1rem; width: 100%; padding: 0.9rem; border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; color: #fff; background-color: #007bff; cursor: pointer;
       transition: background 0.3s;
     }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .barcodes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 2rem;
-      justify-content: center;
-    }
-    .barcode {
-      padding: 0.5rem;
-      border: 1px dashed #aaa;
-    }
+    button:hover { background-color: #0056b3; }
+    .barcodes { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; justify-content: center; }
+    .barcode { padding: 0.5rem; border: 1px dashed #aaa; }
+    .barcode-list { margin-top: 1rem; text-align: left; font-size: 0.9rem; }
+    .barcode-entry { margin-bottom: 0.5rem; }
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        page-break-after: always;
-      }
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="logo.jpg" alt="Shop Logo" class="logo">
-    <div class="shop-name">Baloch Tools and Welding Material</div>
-    <h1>Hardware Barcode Generator</h1>
 
-    <label for="barcodeInput">Enter Barcode (digits only)</label>
-    <input type="text" id="barcodeInput" placeholder="e.g., 1234567890" pattern="\d+">
+<div class="container">
+  <img src="logo.jpg" alt="Shop Logo" class="logo">
+  <div class="shop-name">Baloch Tools and Welding Material</div>
+  <h1>Multi Barcode Generator</h1>
 
-    <label for="quantityInput">Enter Quantity</label>
-    <input type="number" id="quantityInput" placeholder="e.g., 10" min="1">
+  <label for="barcodeInput">Enter Barcode (digits only)</label>
+  <input type="text" id="barcodeInput" placeholder="e.g., 1234567890" pattern="\d+">
 
-    <button onclick="generateBarcodes()">Print Barcodes</button>
+  <label for="quantityInput">Enter Quantity</label>
+  <input type="number" id="quantityInput" placeholder="e.g., 10" min="1">
+
+  <button onclick="addBarcode()">Add Barcode</button>
+
+  <div class="barcode-list" id="barcodeList">
+    <strong>Added Barcodes:</strong>
+    <div id="barcodeEntries"></div>
   </div>
 
-  <div id="printArea" class="barcodes"></div>
+  <button onclick="printBarcodes()">Print All Barcodes</button>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script>
-    function generateBarcodes() {
-      const barcodeValue = document.getElementById('barcodeInput').value.trim();
-      const quantity = parseInt(document.getElementById('quantityInput').value);
-      const printArea = document.getElementById('printArea');
+<div id="printArea" class="barcodes"></div>
 
-      if (!/^[0-9]+$/.test(barcodeValue)) {
-        alert("Barcode must contain digits only.");
-        return;
-      }
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+  const barcodes = [];
 
-      if (isNaN(quantity) || quantity < 1) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
+  function addBarcode() {
+    const barcodeValue = document.getElementById('barcodeInput').value.trim();
+    const quantity = parseInt(document.getElementById('quantityInput').value);
 
-      printArea.innerHTML = '';
-      for (let i = 0; i < quantity; i++) {
+    if (!/^[0-9]+$/.test(barcodeValue)) {
+      alert("Barcode must contain digits only.");
+      return;
+    }
+    if (isNaN(quantity) || quantity < 1) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    barcodes.push({ value: barcodeValue, quantity: quantity });
+    document.getElementById('barcodeInput').value = '';
+    document.getElementById('quantityInput').value = '';
+    updateBarcodeList();
+    updatePreview();
+  }
+
+  function updateBarcodeList() {
+    const listDiv = document.getElementById('barcodeEntries');
+    listDiv.innerHTML = '';
+    barcodes.forEach((item, index) => {
+      const entry = document.createElement('div');
+      entry.className = 'barcode-entry';
+      entry.innerText = `Barcode: ${item.value} | Quantity: ${item.quantity}`;
+      listDiv.appendChild(entry);
+    });
+  }
+
+  function updatePreview() {
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = '';
+
+    barcodes.forEach(item => {
+      for (let i = 0; i < item.quantity; i++) {
         const div = document.createElement('div');
         div.className = 'barcode';
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("jsbarcode-format", "CODE128");
-        svg.setAttribute("jsbarcode-value", barcodeValue);
+        svg.setAttribute("jsbarcode-value", item.value);
         svg.setAttribute("jsbarcode-textmargin", "0");
         svg.setAttribute("jsbarcode-height", "40");
         svg.setAttribute("jsbarcode-width", "1.5");
@@ -147,8 +113,17 @@
         printArea.appendChild(div);
         JsBarcode(svg).init();
       }
-      window.print();
+    });
+  }
+
+  function printBarcodes() {
+    if (barcodes.length === 0) {
+      alert("Please add at least one barcode first.");
+      return;
     }
-  </script>
+    window.print();
+  }
+</script>
+
 </body>
 </html>
