@@ -23,14 +23,23 @@
       transition: background 0.3s;
     }
     button:hover { background-color: #0056b3; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
     .barcodes { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; justify-content: center; }
     .barcode { padding: 0.5rem; border: 1px dashed #aaa; }
     .barcode-list { margin-top: 1rem; text-align: left; font-size: 0.9rem; }
     .barcode-entry { margin-bottom: 0.5rem; }
+    .clear-btn { background-color: #dc3545; margin-top: 0.5rem; }
+    .clear-btn:hover { background-color: #c82333; }
     @media print {
       body * { visibility: hidden; }
       #printArea, #printArea * { visibility: visible; }
       #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .barcode { 
+        page-break-inside: avoid; 
+        margin: 0.2cm; 
+        padding: 0.1cm; 
+        border: 1px solid #000; 
+      }
     }
   </style>
 </head>
@@ -54,7 +63,8 @@
     <div id="barcodeEntries"></div>
   </div>
 
-  <button onclick="printBarcodes()">Print All Barcodes</button>
+  <button onclick="printBarcodes()" id="printBtn">Print All Barcodes</button>
+  <button onclick="clearBarcodes()" class="clear-btn">Clear All Barcodes</button>
 </div>
 
 <div id="printArea" class="barcodes"></div>
@@ -89,40 +99,98 @@
     barcodes.forEach((item, index) => {
       const entry = document.createElement('div');
       entry.className = 'barcode-entry';
-      entry.innerText = `Barcode: ${item.value} | Quantity: ${item.quantity}`;
+      entry.innerHTML = `Barcode: ${item.value} | Quantity: ${item.quantity} 
+        <button onclick="removeBarcode(${index})" style="margin-left: 10px; padding: 2px 6px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">Remove</button>`;
       listDiv.appendChild(entry);
     });
+  }
+
+  function removeBarcode(index) {
+    barcodes.splice(index, 1);
+    updateBarcodeList();
+    updatePreview();
+  }
+
+  function clearBarcodes() {
+    barcodes.length = 0;
+    updateBarcodeList();
+    updatePreview();
   }
 
   function updatePreview() {
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = '';
 
+    if (barcodes.length === 0) {
+      return;
+    }
+
+    // Create all barcode elements first
+    const barcodeElements = [];
+    
     barcodes.forEach(item => {
       for (let i = 0; i < item.quantity; i++) {
         const div = document.createElement('div');
         div.className = 'barcode';
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("jsbarcode-format", "CODE128");
-        svg.setAttribute("jsbarcode-value", item.value);
-        svg.setAttribute("jsbarcode-textmargin", "0");
-        svg.setAttribute("jsbarcode-height", "40");
-        svg.setAttribute("jsbarcode-width", "1.5");
-        svg.setAttribute("jsbarcode-fontSize", "12");
         div.appendChild(svg);
         printArea.appendChild(div);
-        JsBarcode(svg).init();
+        barcodeElements.push({ svg, value: item.value });
+      }
+    });
+
+    // Generate barcodes with proper error handling
+    barcodeElements.forEach(({ svg, value }) => {
+      try {
+        JsBarcode(svg, value, {
+          format: "CODE128",
+          textMargin: 0,
+          height: 40,
+          width: 1.5,
+          fontSize: 12,
+          displayValue: true
+        });
+      } catch (error) {
+        console.error('Error generating barcode:', error);
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="red">Error</text>';
       }
     });
   }
 
-  function printBarcodes() {
+  async function printBarcodes() {
     if (barcodes.length === 0) {
       alert("Please add at least one barcode first.");
       return;
     }
-    window.print();
+
+    const printBtn = document.getElementById('printBtn');
+    printBtn.disabled = true;
+    printBtn.textContent = 'Preparing Print...';
+
+    try {
+      // Small delay to ensure all barcodes are rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Trigger print
+      window.print();
+    } finally {
+      printBtn.disabled = false;
+      printBtn.textContent = 'Print All Barcodes';
+    }
   }
+
+  // Add Enter key support for inputs
+  document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('quantityInput').focus();
+    }
+  });
+
+  document.getElementById('quantityInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      addBarcode();
+    }
+  });
 </script>
 
 </body>
